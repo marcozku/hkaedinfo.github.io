@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏥 香港急症室實時數據</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Weather Alert Banner -->
+  <div id="weather-alert" class="weather-alert hidden">
+    <div class="weather-alert-content">
+      <span class="weather-alert-icon">⚠️</span>
+      <span id="weather-alert-text"></span>
+    </div>
+  </div>
+
+  <!-- Enhanced Loading Screen with detailed status -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">
+        <h2>🏥 香港急症室實時數據</h2>
+        <p id="loading-message">🔄 正在連接醫管局API，請稍候...</p>
+        <div class="loading-progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div id="connection-status" class="connection-status">正在初始化...</div>
+        <div class="loading-tips">
+          <small>💡 首次連接可能需要較長時間，請耐心等候</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Header Bar - Only visible at absolute top -->
+  <header class="top-header" id="top-header" role="banner">
+    <div class="top-header-content">
+      <div class="header-main">
+        <div class="app-info">
+          <h1 id="app-title">🏥 香港急症室實時數據</h1>
+          <p id="app-subtitle">📊 醫管局官方18間急症室 - 實時數據</p>
+        </div>
+        
+        <div class="datetime-weather">
+          <div class="datetime">
+            <div id="current-date" class="current-date">📅</div>
+            <div id="current-time" class="current-time">⏰</div>
+          </div>
+          <div class="weather-info">
+            <div id="weather-summary" class="weather-summary">🌤️ 載入天氣中...</div>
+            <div id="temperature" class="temperature">🌡️</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Control Bar -->
+  <section class="control-bar" role="region" aria-label="控制選項">
+    <div class="control-content">
+      <div class="control-group">
+        <select id="language-select" class="form-control control-select">
+          <option value="tc">🇭🇰 繁體中文</option>
+          <option value="sc">🇨🇳 简体中文</option>
+          <option value="en">🇺🇸 English</option>
+        </select>
+        
+        <select id="sort-select" class="form-control control-select">
+          <option value="distance" id="sort-distance">📍 按距離排序</option>
+          <option value="waiting" id="sort-waiting">⏱️ 按等候時間排序</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <select id="region-filter" class="form-control control-select">
+          <option value="all" id="region-all">🗺️ 所有地區</option>
+          <option value="香港島" id="region-hk">🏝️ 香港島</option>
+          <option value="九龍" id="region-kl">🏙️ 九龍</option>
+          <option value="新界" id="region-nt">🌿 新界</option>
+        </select>
+        
+        <select id="cluster-filter" class="form-control control-select">
+          <option value="all" id="cluster-all">🔗 所有聯網</option>
+          <option value="港島東聯網" id="cluster-hke">🌅 港島東聯網</option>
+          <option value="港島西聯網" id="cluster-hkw">🌇 港島西聯網</option>
+          <option value="九龍東聯網" id="cluster-kle">🌄 九龍東聯網</option>
+          <option value="九龍中聯網" id="cluster-klc">🏢 九龍中聯網</option>
+          <option value="九龍西聯網" id="cluster-klw">🌆 九龍西聯網</option>
+          <option value="新界東聯網" id="cluster-nte">🌲 新界東聯網</option>
+          <option value="新界西聯網" id="cluster-ntw">🌳 新界西聯網</option>
+        </select>
+      </div>
+      
+      <button id="find-nearest" class="btn btn--primary btn-find">
+        <span id="find-nearest-text">🎯 尋找最近醫院</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main-content" role="main">
+    <section id="hospital-list" class="hospital-list">
+      <!-- Hospital cards will be inserted here -->
+    </section>
+  </main>
+
+  <!-- Hospital Details Modal -->
+  <div id="hospital-modal" class="modal hidden" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title">🏥</h2>
+        <button id="modal-close" class="modal-close" aria-label="關閉">❌</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info-grid">
+          <div class="info-item">
+            <strong id="modal-address-label">📍 地址：</strong>
+            <span id="modal-address"></span>
+          </div>
+          <div class="info-item">
+            <strong id="modal-phone-label">📞 電話：</strong>
+            <span id="modal-phone"></span>
+          </div>
+          <div class="info-item">
+            <strong id="modal-cluster-label">🔗 聯網：</strong>
+            <span id="modal-cluster"></span>
+          </div>
+          <div class="info-item">
+            <strong id="modal-distance-label">📏 距離：</strong>
+            <span id="modal-distance"></span>
+          </div>
+        </div>
+        <div class="modal-services">
+          <h3 id="modal-services-title">⚠️ 不提供的專科住院服務：</h3>
+          <div id="modal-unavailable-services" class="unavailable-services-list">
+            <!-- Services will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Status Bar -->
+  <footer class="status-bar" role="contentinfo">
+    <div class="status-content">
+      <div class="status-item">
+        <span class="status-label" id="countdown-label">⏱️ 下次更新倒數:</span>
+        <span id="countdown" class="status-value">--秒</span>
+      </div>
+      <div class="status-item">
+        <span id="api-status-indicator" class="status-indicator"></span>
+        <span id="api-status-text" class="status-text">🔄 正在連接醫管局API...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label" id="last-update-label">📅 最後更新:</span>
+        <time id="last-update-time" class="status-value">--:--:--</time>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
